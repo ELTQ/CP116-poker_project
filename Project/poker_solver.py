@@ -1,130 +1,341 @@
-import math
+import random
+from itertools import combinations
 
+import numpy
 
-# choose k value from n
-# while order do not matter
-def C(n,k):
-    return math.factorial(n)/(math.factorial(k)*math.factorial(n-k))
-
-def odds(probability: float) -> int:
-    return int(round(1/probability - 1,0))
-# ... : 1
-
-def getRank(rank:str) -> int:
-    inputRanks = ['2','3','4','5','6','7','8','9','T','J','Q','K','A']
-    relativeRank = [2,3,4,5,6,7,8,9,10,11,12,13,14]
-    for i in range(len(inputRanks)):
-        if inputRanks[i] == rank:
-            return relativeRank[i]
-    return -1
-
+playerNum = 2
+suits = ["S", "C", "H", "D"]
+ranks = {'2':1, '3':2, '4':3, '5':4, '6':5, '7':6, '8':7, '9':8, 'T':9, 'J':10, 'Q':11, 'K':12, 'A':13}
 class Card:
-    # rank: from 2 to A
-    # suit: D(diamond), S(spade), H(heart), C(club)
-    def __init__(self, rank: str, suit: str):
-        self.rank = rank
+    def __init__(self, suit, rank):
         self.suit = suit
+        self.rank = rank
 
-
-class Node:
-    def __init__(self,val: float):
-        self.value = val
-        self.r = -1
-        self.l = -1
-
-def biggerThan(card1: Card, card2: Card):
-    if getRank(card1.rank) > getRank(card2.rank):
-        return True
+def haveOverlap(list1,list2):
+    for i in list1:
+        if i in list2:
+            return True
     return False
 
+def combine(card1,card2):
+    ans = []
+    for c in card1+card2:
+        ans.append(c)
+    return ans
 
-def probabilityOfHavingABiggerPair(rank: str):
-    return ((14 - getRank(rank)) * 4) / 50 * 3/49
+def sortCards(lOCards):
+    return sorted(lOCards, key=lambda x: ranks[x.rank])
+
+def getSameRanks(lOCards):
+    ans = []
+    current = []
+    for c in sortCards(lOCards):
+        if len(current) == 0:
+            current.append(c)
+            continue
+        if current[0].rank == c.rank:
+            current.append(c)
+            continue
+        ans.append(current)
+        current = [c]
+    if current not in ans:
+        ans.append(current)
+
+    maxLen = 0
+    maxRank = 0
+    maxComb = []
+    for comb in ans:
+        try:
+            if len(comb) > maxLen or (len(comb) == maxLen and ranks[comb[0].rank] >= maxRank):
+                maxLen = len(comb)
+                maxRank = ranks[comb[0].rank]
+                maxComb = comb
+        except:
+            print("problem with cards")
+    return maxComb
+
+def getStraight(lOCards, keepAll = False):
+    sortedCards = sortCards(lOCards)
+    straight = []
+    lastRank = 0
+    if sortedCards[-1].rank == "A":
+        straight.append(sortedCards[-1])
+        lastRank = 1
+
+    for c in sortedCards:
+        if len(straight) == 0:
+            lastRank = ranks[c.rank]
+            straight.append(c)
+            continue
+        if ranks[c.rank] == lastRank:
+            continue
+        if ranks[c.rank] - lastRank == 1:
+            lastRank = ranks[c.rank]
+            straight.append(c)
+            continue
+        if len(straight) >= 5:
+            if keepAll:
+                return straight
+            return straight[-5:]
+        straight = [c]
+        lastRank = ranks[c.rank]
+    if len(straight) >= 5:
+        if keepAll:
+            return straight
+        return straight[-5:]
+    return None
+
+def getFlush(lOCards, keepAll = False):
+    sortedCards = sortCards(lOCards)
+    sameSuit = {}
+    for c in sortedCards:
+        if c.suit not in sameSuit:
+            sameSuit[c.suit] = [c]
+            continue
+        sameSuit[c.suit].append(c)
+    for s in sameSuit:
+        if len(sameSuit[s]) >=5:
+            if keepAll:
+                return sameSuit[s]
+            return sameSuit[s][-5:]
+    return None
+
+def copyCards(lOCards):
+    return [c for c in lOCards]
+
+def sameCard(c1,c2):
+    return c1.rank == c2.rank and c1.suit == c2.suit
+
+def findSame(lOC1, lOC2):
+    same = []
+    if lOC1 == None or lOC2 == None:
+        return None
+    for c1 in lOC1:
+        for c2 in lOC2:
+            try:
+                if sameCard(c1,c2):
+                    same.append(c1)
+            except:
+                print(c1,c2)
+    return same
+
+def getStraightFlush(lOCards):
+    same = findSame(getFlush(lOCards), getStraight(lOCards))
+    if same == None:
+        return None
+    if len(same) >= 5:
+        return same[-5:]
+    return None
+
+def getFourOfAKind(lOCards):
+    sameRank = getSameRanks(lOCards)
+    if len(sameRank) == 4:
+        return [sameRank]
+    return None
+
+def getThreeOfAKind(lOCards):
+    sameRank = getSameRanks(lOCards)
+    if len(sameRank) == 3:
+        return [sameRank]
+    return None
+
+def exclude(lOC,what):
+    notSame = copyCards(lOC)
+    for w in what:
+        for ns in notSame:
+            if sameCard(w,ns):
+                notSame.remove(ns)
+    return notSame
 
 
-def build(p: float, depth: int, root: Node, currentDepth: int) -> None:
-    if currentDepth == depth:
-        return
-    root.l = Node(p * root.value)
-    root.r = Node((1-p) * root.value)
-    build(p,depth,root.l,currentDepth+1)
-    build(p,depth,root.r,currentDepth+1)
+def getFullHouse(lOCards):
+    copiedCards = copyCards(lOCards)
+    sameRanks = []
+
+    while True:
+        if len(copiedCards) == 0:
+            break
+        nextGetRank = getSameRanks(copiedCards)
+        copiedCards = exclude(copiedCards, nextGetRank)
+        if nextGetRank == None or len(nextGetRank) == 0:
+            break
+        if len(nextGetRank) < 2:
+            continue
+        sameRanks.append(nextGetRank)
 
 
-def findAllPSum(root: Node) -> float:
-    if root.r == -1:
-        return root.value
-    return findAllPSum(root.l) + findAllPSum(root.r) if root.r.l != -1 else 0
+    possibleThree = []
+    possiblePair = []
+    for s in sameRanks:
+        if len(s) >= 3:
+            possibleThree.append(s)
+        elif len(s) >= 2:
+            possiblePair.append(s)
 
-# this function will build a tree then find all possible wins
-def findWin(p: float,depth: int):
-    root = Node(1)
-    build(p,depth,root,1)
-    return findAllPSum(root)
+    if len(possibleThree) == 0:
+        return None
+    maxThree = max(possibleThree, key = lambda x: ranks[x[0].rank])
+    possibleThree.remove(maxThree)
+    possiblePair += possibleThree
+    if len(possiblePair) == 0:
+        return None
+    possiblePair = sorted(possiblePair, key = lambda x: ranks[x[0].rank])
+    maxTwo = max(possiblePair, key = lambda x: ranks[x[0].rank])
+    return [maxThree[-3:], maxTwo[-2:]]
+
+def getPair(lOCards):
+    sameRank = getSameRanks(lOCards)
+    if len(sameRank) < 2:
+        return None
+    return [sorted(sameRank, key = lambda x: ranks[x.rank])[-2:]]
+
+def getTwoPairs(lOCards):
+    sameRank = getSameRanks(lOCards)
+    if len(sameRank) < 2:
+        return None
+    clearedLOC = exclude(lOCards,sameRank)
+    another = getSameRanks(clearedLOC)
+    if len(another) < 2:
+        return None
+    return [sameRank[-2:], another[-2:]]
+
+def getRoyalFlush(lOCards):
+    straightFlush = getStraightFlush(lOCards)
+    if straightFlush == None:
+        return None
+    if straightFlush[0].rank == "J":
+        return straightFlush
+    return None
 
 
-def probabilityOfOtherPlayerHanveBetterPair(rank: str, amountPlayer: int):
-    return probabilityOfHavingABiggerPair(rank) * (amountPlayer-1) - findWin(probabilityOfHavingABiggerPair(rank),amountPlayer)
+def formCard(lOCards, pool):
+    combined = combine(lOCards,pool)
+    checkThese = [getRoyalFlush,getStraightFlush,getFourOfAKind,getFullHouse,getFlush,getStraight,getThreeOfAKind,getTwoPairs,getPair]
+    for func,i in zip(checkThese,range(len(checkThese))):
+        cards = func(combined)
+        if cards == None:
+            continue
+        return cards, i
+    return [sorted(combined,key = lambda x: ranks[x.rank])[len(combined)-1]], 1000
+    # ranks:
+    # royal flush
+    # straight flush
+    # four of a kind
+    # full house
+    # flush
+    # straight
+    # three of a kind
+    # two pairs
+    # one pair
+    # high card
+
+def compair(pl1Card, pl2Card, pool):
+    usr1 = formCard(pl1Card, pool)
+    usr2 = formCard(pl2Card, pool)
+    if usr1[1] < usr2[1]:
+        return True
+    if usr1[1] > usr2[1]:
+        return False
+    us1Cards = usr1[0]
+    us2Cards = usr2[0]
+    for i,j in zip(us1Cards,us2Cards):
+        try:
+            if ranks[i.rank] > ranks[j.rank]:
+                return True
+            if ranks[i.rank] < ranks[j.rank]:
+                return False
+        except:
+            for ii,jj in zip(i,j):
+                if ranks[ii.rank] > ranks[jj.rank]:
+                    return True
+                if ranks[ii.rank] < ranks[jj.rank]:
+                    return False
+    return True
 
 
-# probabilitySingleOpponentHaivngBetterAcePairWhenWeHaveA
-def PofAxBetterOurAx(rank: str):
-    return (3/50*2/49)+(3/50*(13-getRank(rank))*4/49*2)
+# loop through everything
+# def winLoose(pl1Card,pool):
+#     win = 0
+#     rounds = 0
+#     for i in list(combinations(allCards,2)):
+#         if haveOverlap(i,pl1Card) or haveOverlap(i,pool):
+#             continue
+#         if compair(pl1Card,i, pool):
+#             win+=1
+#         rounds += 1
+#     return win/rounds
 
-n_pocket_combination = C(52,2)
+# random choice
+def winLoose(pl1Card,pool, copied):
+    win = 0
+    rounds = 0
+    for i in range(10000):
+        possibleCards = copyCards(copied)
+        currentPool = list(numpy.random.choice(possibleCards, size=5 - len(pool), replace=False)) + pool
+        possibleCards = exclude(possibleCards,currentPool)
+        pls = []
+        for pl in range(playerNum-1):
+            pls.append(list(numpy.random.choice(possibleCards, size=2,replace=False)))
+            possibleCards = exclude(possibleCards,pls[-1])
+        winPl = True
+        for p in pls:
+            if not compair(pl1Card,p, currentPool):
+                winPl = False
+        if winPl:
+            win += 1
+        rounds += 1
+        print(rounds)
+    return win/rounds
 
-n_suit_combination_for_pocket_pair = C(4,2)
-# any rank, there may be 4 possible suits
-# for each different suit there may form a pair
-
-P_of_specific_pocket_pair = n_suit_combination_for_pocket_pair/n_pocket_combination
-P_of_pocket_pairs = n_suit_combination_for_pocket_pair * 13/n_pocket_combination
-# 13 means 13 ranks
-
-n_combination_for_suited_hands = C(13,2)
-n_suit_combination_for_suited_hands = C(4,1)
-P_of_specific_pocket_pair = n_suit_combination_for_suited_hands/n_pocket_combination
-P_of_pocket_pair = n_combination_for_suited_hands * n_suit_combination_for_suited_hands/n_pocket_combination
-
-n_combination_for_offsuited_hands = 78
-n_suit_combination_for_offsuited_hands = C(4,1) * C(3,1)
-P_of_specific_offsuit = n_suit_combination_for_offsuited_hands/n_pocket_combination
-P_of_offsuit = n_suit_combination_for_offsuited_hands * n_combination_for_offsuited_hands/n_pocket_combination
-
-P_of_oppo_double_ace_when_having_one_ace = 3/50 * 2/49
+def cardToString(cards):
+    ans = ""
+    for combination in cards:
+        for c in combination:
+            ans += c.rank + c.suit + ","
+    return ans
 
 
-# probability of specific hand
-all_possible_combination = math.factorial(52)/math.factorial(52-5)/math.factorial(5)
+allCards = []
+for s in suits:
+    for r in ranks:
+        allCards.append(Card(s, r))
 
-P_royal_flush = C(4,1)/all_possible_combination
-P_straight_flush = C(10,1)*C(4,1)-C(4,1)/all_possible_combination
-P_four_of_a_kind = C(13,1)*C(4,4)*C(48,1)/all_possible_combination
-P_full_house = C(13,1)*C(4,3)*C(12,1)*C(4,2)/all_possible_combination
-P_flush = C(13,5)*C(4,1)-C(10,1)*C(4,1)/all_possible_combination
-P_straight = C(10,1)*math.pow(C(4,1),5)-C(10,1)*C(4,1)/all_possible_combination
-P_three_of_a_kind = C(13,1)*C(4,3)*C(12,2)*math.pow(C(4,1),2)/all_possible_combination
-P_two_pair = C(13,2)*math.pow(C(4,2),2)*C(11,1)*C(4,1)/all_possible_combination
-P_pair = C(13,1)*C(4,2)*C(12,3)*math.pow(C(4,1),3)/all_possible_combination
-P_high_card = (C(13,5)-10)*(math.pow(C(4,1),5)-4)
 
-print(probabilityOfOtherPlayerHanveBetterPair("K",3))
 
-if __name__ == "__main__":
-    usrHand = []
-    for i in range(2):
-        usrHand.append(Card(input("what is your rank? [2,3,4,5,6,7,8,9,T,J,Q,K,A]"),input("what is your suit [D,S,H,C]")))
-    playerAmount = int(input("how many players do we have"))
-    pocketPair = False
-    if usrHand[0].rank == usrHand[1].rank:
-        pocketPair = True
-    suitedHand = False
-    if usrHand[0].suit == usrHand[1].suit:
-        suitedHand = True
+# iniHand = list(combinations(allCards, 2))
+# pool = list(combinations(allCards, 5))
+# for h in iniHand:
+#     for p in pool:
+#         if haveOverlap(h, p):
+#             continue
+#         pocketWin[cardToString((h,p))] = winLoose(h,p)
+# probability = ""
+# for pw in pocketWin:
+#     probability += pw, pocketWin[pw]
+# f = file = open("data.txt","w")
+# f.write(probability)
+# f.close()
 
-    if pocketPair:
-        rank = usrHand[0].rank
-        P_other_better_hand = probabilityOfOtherPlayerHanveBetterPair(rank,playerAmount)
-        P_no_over_card_on_flop = C(4*getRank(rank)-6,3)/C(50,3)
-        P_no_over_card_on_turn = C(4*getRank(rank)-6,4)/C(50,4)
-        P_no_over_card_on_river = C(4*getRank(rank)-6,5)/C(50,5)
+
+
+
+
+def makeDecision(hand, poolCard, poolMoney, bet, allin):
+    copied = copyCards(allCards)
+    # iniHand = [Card("D", "A"), Card("S", "A")]
+    iniHand = hand
+    # iniPool = [Card("D","8"),Card("S","T"),Card("S","4")]
+    iniPool = poolCard
+    copied = exclude(copied, iniHand)
+    possibleCards = copyCards(copied)
+    winRate = winLoose(iniHand, iniPool,possibleCards)
+    if allin:
+        if winRate > .8:
+            return "check"
+        else:
+            return "fold"
+    if bet < poolMoney*winRate:
+        if poolMoney * winRate > 2 * bet:
+            return "raise"
+        return "check"
+    return "fold"

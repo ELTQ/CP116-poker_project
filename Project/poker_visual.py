@@ -3,12 +3,8 @@ from skimage.filters import sobel
 import numpy as np
 from sklearn.neural_network import MLPClassifier
 
-
-f = open("cards.txt")
-cards = f.readlines()
-cards = [c.replace('\n', '') for c in cards]
-
-
+f = open("cards.txt",'r')
+cards = f.read().split('\n')
 
 
 X = []

@@ -332,8 +332,7 @@ def makeDecision(hand, poolCard, poolMoney, bet, allin):
     if allin:
         if winRate > .8:
             return "check"
-        else:
-            return "fold"
+        return "fold"
     if bet < poolMoney*winRate:
         if poolMoney * winRate > 2 * bet:
             return "raise"

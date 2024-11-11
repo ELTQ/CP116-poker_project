@@ -1,12 +1,16 @@
 import joblib
 from poker_visual import preprocess
+import cv2 as cv
 
 p_model = joblib.load('model.pkl')
 
 
-name = "Ace_of_Diamond"
-rankSuit = name.split("_of_")
+def predCard(img):
+    return p_model.predict(preprocess(img).reshape(1, -1))
 
+
+
+"""
 dict_hand = {}
 dict_river = {}
 for card in hand:
@@ -21,3 +25,4 @@ for card in community_cards:
     rank = pred.split("_")[0]
     suit = pred.split("_")[1]
     dict_river[rank] = suit
+"""

@@ -5,7 +5,7 @@ import numpy
 
 playerNum = 2
 suits = ["S", "C", "H", "D"]
-ranks = {'2':1, '3':2, '4':3, '5':4, '6':5, '7':6, '8':7, '9':8, 'T':9, 'J':10, 'Q':11, 'K':12, 'A':13}
+ranks = {'Two':1, 'Three':2, 'Four':3, 'Five':4, 'Six':5, 'Seven':6, 'Eight':7, 'Nine':8, 'Ten':9, 'Jack':10, 'Queen':11, 'King':12, 'Ace':13}
 class Card:
     def __init__(self, suit, rank):
         self.suit = suit

@@ -21,4 +21,3 @@ for card in community_cards:
     rank = pred.split("_")[0]
     suit = pred.split("_")[1]
     dict_river[rank] = suit
-

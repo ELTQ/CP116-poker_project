@@ -77,7 +77,7 @@ class Game:
                 break
             self.betMoney += int(input("how much money do you need to check"))
             allIn = boolean(input("do anyone all in yet? True for yes, False for no"))
-            print(makeDecision(self.hand,self.community_cards, self.pot, self.betMoney, allIn == "True"))
+            print(makeDecision(self.hand,self.community_cards, self.pot, self.betMoney, allIn))
 
 
 if __name__ == "__main__":

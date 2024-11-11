@@ -2,6 +2,7 @@
 from PIL import Image
 import keyboard
 import poker_solver
+import poker_test
 
 
 class Game:
@@ -17,33 +18,52 @@ class Game:
         try:
             image = Image.open(file_path)
             return image
-        except FileNotFoundError:
+        except:
             print("File not found. Please check the path.")
             return None
 
     def load_hand(self):
         print("Please upload your current hand")
-        for i in range(2):
+        while True:
             image = self.import_image()
-            self.hand.append(image)
+            if image != None:
+                self.hand.append(image)
+            if len(self.hand) ==2:
+                break
+        temp = [predCard(c) for c in self.hand]
+        self.hand = temp
         print("Your hand has been saved.")
 
-    # def load_flop(self):
-    #     print("Now that the flop has been dealt, please upload the flop.")
-    #     for i in range(3):
-    #         card = self.import_image()
-    #         self.community_cards.append(card)
+    def load_flop(self):
+        print("Now that the flop has been dealt, please upload the flop.")
+        for i in range(3):
+            self.community_deal()
 
     def community_deal(self):
         if len(self.community_cards) == 5:
             print("You've reached the maximum amount of cards you can add to the river.")
         else:
-            card = self.import_image()
-            self.community_cards.append(card)
+            not_valid = True
+            while not_valid:
+                card = self.import_image()
+                if card != None:
+                    self.community_cards.append(card)
+                    not_valid = False
+            temp = [predCard(c) for c in self.community_cards]
+            self.community_cards = temp
+
 
 
     def game_loop(self):
         print("Welcome to a new game of Poker!")
+
+        haveErr = False
+        while not haveErr:
+            try:
+                poker_solver.playerNum = int(input("How many player are there?: "))
+                haveErr = True
+            except:
+                print("Invalid amount, please try again.")
     #     self.load_hand()
     #     # get cards() from eliot
     #     # run decision from alex
@@ -56,12 +76,12 @@ class Game:
     #     # self.load_flop()
         counter = 0
         while True:
-            print("Press 'r' to add cards")
+            print("Press 'r' to add cards" * (counter < 4))
             print("Press 'p' to update the pot")
-            print("press 'q' to quit ")
+            print("Press 'q' to quit ")
             # if keyboard.is_pressed("r"): #input("what is your decision")
             check = input("")
-            if check == "r":
+            if check == "r" and counter < 4:
                 if counter == 0:
                     self.load_hand()
                 elif counter == 1:
@@ -75,9 +95,21 @@ class Game:
                 print("Okay! Current pot amount set to ", self.pot)
             elif check == "q":
                 break
-            self.betMoney += int(input("how much money do you need to check"))
-            allIn = boolean(input("do anyone all in yet? True for yes, False for no"))
-            print(makeDecision(self.hand,self.community_cards, self.pot, self.betMoney, allIn))
+            haveErr = False
+            while not haveErr:
+                try:
+                    self.betMoney += int(input("How much money do you need to check?: "))
+                    haveErr = True
+                except:
+                    print("Invalid amount, please try again.")
+            haveErr = False
+            while not haveErr:
+                try:
+                    self.allIn = int(input("Is anyone all in?(Type 1 for yes, 2 for no): ")) == 1
+                    haveErr= True
+                except:
+                    print("Invalid amount, please try again.")
+            print(makeDecision([self.hand,self.community_cards, self.pot, self.betMoney, self.allIn))
 
 
 if __name__ == "__main__":

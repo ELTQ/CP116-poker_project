@@ -331,10 +331,10 @@ def makeDecision(hand, poolCard, poolMoney, bet, allin):
     winRate = winLoose(iniHand, iniPool,possibleCards)
     if allin:
         if winRate > .8:
-            return "check"
-        return "fold"
+            return "check", winRate
+        return "fold", winRate
     if bet < poolMoney*winRate:
         if poolMoney * winRate > 2 * bet:
-            return "raise"
-        return "check"
-    return "fold"
+            return "raise", winRate
+        return "check", winRate
+    return "fold", winRate

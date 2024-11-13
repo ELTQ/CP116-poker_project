@@ -5,26 +5,35 @@ import numpy
 
 playerNum = 2
 suits = ["S", "C", "H", "D"]
+# all possible suits
 ranks = {'Two':1, 'Three':2, 'Four':3, 'Five':4, 'Six':5, 'Seven':6, 'Eight':7, 'Nine':8, 'Ten':9, 'Jack':10, 'Queen':11, 'King':12, 'Ace':13}
+# all ranks with correlated rankings
+# which two is the smallest and Ace is the biggest
 class Card:
     def __init__(self, suit, rank):
         self.suit = suit
         self.rank = rank
+# standard form of card in this file
+
 
 def haveOverlap(list1,list2):
     for i in list1:
         if i in list2:
             return True
     return False
+# find were there overlap between two lists
 
 def combine(card1,card2):
     ans = []
     for c in card1+card2:
         ans.append(c)
     return ans
+# combine two lists resulting in a new list
+# no original ones will be influenced
 
 def sortCards(lOCards):
     return sorted(lOCards, key=lambda x: ranks[x.rank])
+# sort the list of card based on rank
 
 def getSameRanks(lOCards):
     ans = []
@@ -53,6 +62,7 @@ def getSameRanks(lOCards):
         except:
             print("problem with cards")
     return maxComb
+# get cards that have the same rank within the list
 
 def getStraight(lOCards, keepAll = False):
     sortedCards = sortCards(lOCards)
@@ -84,6 +94,8 @@ def getStraight(lOCards, keepAll = False):
             return straight
         return straight[-5:]
     return None
+# get combo that is straight if possible
+
 
 def getFlush(lOCards, keepAll = False):
     sortedCards = sortCards(lOCards)
@@ -99,12 +111,16 @@ def getFlush(lOCards, keepAll = False):
                 return sameSuit[s]
             return sameSuit[s][-5:]
     return None
+# get combo that is flush if possible
 
 def copyCards(lOCards):
     return [c for c in lOCards]
+# return the copy of a list of cards
 
 def sameCard(c1,c2):
     return c1.rank == c2.rank and c1.suit == c2.suit
+# tell whether or not are two cards the same interms of values
+# inside it
 
 def findSame(lOC1, lOC2):
     same = []
@@ -118,6 +134,7 @@ def findSame(lOC1, lOC2):
             except:
                 print(c1,c2)
     return same
+# find same cards within the two lists
 
 def getStraightFlush(lOCards):
     same = findSame(getFlush(lOCards), getStraight(lOCards))
@@ -126,18 +143,21 @@ def getStraightFlush(lOCards):
     if len(same) >= 5:
         return same[-5:]
     return None
+# get straight flush combo if possible
 
 def getFourOfAKind(lOCards):
     sameRank = getSameRanks(lOCards)
     if len(sameRank) == 4:
         return [sameRank]
     return None
+# get four of a kind if possible
 
 def getThreeOfAKind(lOCards):
     sameRank = getSameRanks(lOCards)
     if len(sameRank) == 3:
         return [sameRank]
     return None
+# get three of a kind if possible
 
 def exclude(lOC,what):
     notSame = copyCards(lOC)
@@ -146,6 +166,7 @@ def exclude(lOC,what):
             if sameCard(w,ns):
                 notSame.remove(ns)
     return notSame
+# exclude the what from the list of cards input without adjusting original
 
 
 def getFullHouse(lOCards):
@@ -182,12 +203,14 @@ def getFullHouse(lOCards):
     possiblePair = sorted(possiblePair, key = lambda x: ranks[x[0].rank])
     maxTwo = max(possiblePair, key = lambda x: ranks[x[0].rank])
     return [maxThree[-3:], maxTwo[-2:]]
+# get full house if possible
 
 def getPair(lOCards):
     sameRank = getSameRanks(lOCards)
     if len(sameRank) < 2:
         return None
     return [sorted(sameRank, key = lambda x: ranks[x.rank])[-2:]]
+# get pair if possible
 
 def getTwoPairs(lOCards):
     sameRank = getSameRanks(lOCards)
@@ -198,6 +221,7 @@ def getTwoPairs(lOCards):
     if len(another) < 2:
         return None
     return [sameRank[-2:], another[-2:]]
+# get two pairs if possible
 
 def getRoyalFlush(lOCards):
     straightFlush = getStraightFlush(lOCards)
@@ -206,18 +230,10 @@ def getRoyalFlush(lOCards):
     if straightFlush[0].rank == "J":
         return straightFlush
     return None
+# get royal flush if possible
 
 
-def formCard(lOCards, pool):
-    combined = combine(lOCards,pool)
-    checkThese = [getRoyalFlush,getStraightFlush,getFourOfAKind,getFullHouse,getFlush,getStraight,getThreeOfAKind,getTwoPairs,getPair]
-    for func,i in zip(checkThese,range(len(checkThese))):
-        cards = func(combined)
-        if cards == None:
-            continue
-        return cards, i
-    return [sorted(combined,key = lambda x: ranks[x.rank])[len(combined)-1]], 1000
-    # ranks:
+   # ranks:
     # royal flush
     # straight flush
     # four of a kind
@@ -228,6 +244,16 @@ def formCard(lOCards, pool):
     # two pairs
     # one pair
     # high card
+def formCard(lOCards, pool):
+    combined = combine(lOCards,pool)
+    checkThese = [getRoyalFlush,getStraightFlush,getFourOfAKind,getFullHouse,getFlush,getStraight,getThreeOfAKind,getTwoPairs,getPair]
+    for func,i in zip(checkThese,range(len(checkThese))):
+        cards = func(combined)
+        if cards == None:
+            continue
+        return cards, i
+    return [sorted(combined,key = lambda x: ranks[x.rank])[len(combined)-1]], 1000
+ # form combos if possible
 
 def compair(pl1Card, pl2Card, pool):
     usr1 = formCard(pl1Card, pool)
@@ -251,6 +277,7 @@ def compair(pl1Card, pl2Card, pool):
                 if ranks[ii.rank] < ranks[jj.rank]:
                     return False
     return True
+# see if pl1 win with pl2card and pool
 
 
 # loop through everything
@@ -264,6 +291,7 @@ def compair(pl1Card, pl2Card, pool):
 #             win+=1
 #         rounds += 1
 #     return win/rounds
+# loop through everything but cost too much time to run
 
 # random choice
 def winLoose(pl1Card,pool, copied):
@@ -286,6 +314,7 @@ def winLoose(pl1Card,pool, copied):
         rounds += 1
         print(rounds)
     return win/rounds
+# returns the winrate
 
 def cardToString(cards):
     ans = ""
@@ -293,13 +322,13 @@ def cardToString(cards):
         for c in combination:
             ans += c.rank + c.suit + ","
     return ans
-
+# change cards to string for possible usage
 
 allCards = []
 for s in suits:
     for r in ranks:
         allCards.append(Card(s, r))
-
+# append all cards into all cards
 
 
 # iniHand = list(combinations(allCards, 2))
@@ -338,3 +367,4 @@ def makeDecision(hand, poolCard, poolMoney, bet, allin):
             return "raise", winRate
         return "check", winRate
     return "fold", winRate
+# function taht help make decision

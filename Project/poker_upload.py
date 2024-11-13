@@ -1,23 +1,23 @@
 from PIL import Image
 import keyboard
 import poker_solver
-import poker_test
-
+from poker_test import predCard
+from poker_solver import makeDecision
 
 class Game:
     def __init__(self):
-        self.hand = []  #list for user hand
-        self.community_cards = []  #list for river
-        self.pot = 0  #variable for pot amount
-        self.betMoney = 0  #variable for bet amount
+        self.hand = [] #list for user hand
+        self.community_cards = [] #list for river
+        self.pot = 0 #variable for pot amount
+        self.betMoney = 0 #variable for bet amount
 
 
     def import_image(self):
         # Allow user to import their card images
         file_path = input("Enter the path of your image: ").replace(" ","") #Avoiding user error due to spaces after image path
         try:
-            image = Image.open(file_path)
-            return image
+            Image.open(file_path)
+            return file_path
         except:
             # If bad file path ask again for file.
             print("File not found. Please check the path.")
@@ -30,7 +30,7 @@ class Game:
             image = self.import_image()
             if image != None:
                 self.hand.append(image) #saves images to hand list
-            if len(self.hand) ==2:   #after adding their two hand cards while loop breaks
+            if len(self.hand) ==2: #after adding their two hand cards while loop breaks
                 break
         temp = [predCard(c) for c in self.hand]
         self.hand = temp
@@ -47,55 +47,60 @@ class Game:
         if len(self.community_cards) == 5:
             print("You've reached the maximum amount of cards you can add to the river.")
         else:
+            currentCard = ""
             not_valid = True
             while not_valid:
                 card = self.import_image()
                 if card != None:
-                    self.community_cards.append(card)
+                    currentCard = card
                     not_valid = False
-            temp = [predCard(c) for c in self.community_cards]
-            self.community_cards = temp
+            temp = [predCard(currentCard)]
+            self.community_cards += temp
 
 
 
     def game_loop(self):
         # game loop runs the program
         print("Welcome to a new game of Poker!")
-
-        haveErr = False
-        while not haveErr:
-            try:
-                # Adding the # of players to alex's playerNum variable
-                poker_solver.playerNum = int(input("How many player are there?: "))
-                haveErr = True
-            except:
-                print("Invalid amount, please try again.")
-   
-
-        counter = 0 # counter allows us to have the program do certain thing depending
-        # on how mnay times 'r' is pressed
+        counter = 0
         while True:
+            haveErr = False
+            while not haveErr:
+                try:
+                    # Adding the # of players to alex's playerNum variable
+                    poker_solver.playerNum = int(input("How many player are there?: "))
+                    haveErr = True
+                except:
+                    print("Invalid amount, please try again.")
             print("Press 'r' to add cards" * (counter < 4))
             print("Press 'p' to update the pot")
             print("Press 'q' to quit ")
+
             # if keyboard.is_pressed("r"): #input("what is your decision")
             check = input("")
-            if check == "r" and counter < 4:
-                if counter == 0: # the first time the user presses r, run load hand and add only two cards
-                    self.load_hand()
-                elif counter == 1: # the second time r is pressed run load flop and add only 3 cards to riv
-                    self.load_flop()
-                else:
-                    self.community_deal() # after only let user add one card at a time to river. Can't exceed 5.
-                counter += 1
-            elif check=="p":
-                # 'p' allows user to uodate the pot amount
-                pot = input("Enter the amount of current pot: ")
-                self.pot = float(pot) # allowing pot amount to include cents
-                print("Okay! Current pot amount set to ", self.pot)
-            elif check == "q":
+            if check == "q":
                 # giving the user a way to leave quit program
                 break
+                # 'p' allows user to uodate the pot amount
+            if check=="p" or check=="r":
+                haveErr = True
+                while haveErr:
+                    try:
+                        pot = input("Enter the amount of current pot: ")
+                        self.pot = float(pot)
+                        haveErr = False
+                    except:
+                        print("err")
+                print("Okay! Current pot amount set to ", self.pot)
+            if check == "r" and counter < 4:
+                if counter == 0:
+                    self.load_hand()
+                elif counter == 1:
+                    self.load_flop()
+                else:
+                    self.community_deal()
+                counter += 1
+
             haveErr = False
             while not haveErr:
                 try:
@@ -112,7 +117,9 @@ class Game:
                     haveErr= True
                 except:
                     print("Invalid amount, please try again.")
-            print(makeDecision([self.hand,self.community_cards, self.pot, self.betMoney, self.allIn))
+            if counter != 0 and check in "r,p":
+                resl = makeDecision(self.hand,self.community_cards, self.pot, self.betMoney, self.allIn)
+                print(f"We recommend you {resl[0]} the current winrate of your hand is {resl[1]}")
 
 
 if __name__ == "__main__":

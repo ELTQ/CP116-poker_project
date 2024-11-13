@@ -1,4 +1,3 @@
-
 from PIL import Image
 import keyboard
 import poker_solver
@@ -7,39 +6,44 @@ import poker_test
 
 class Game:
     def __init__(self):
-        self.hand = []
-        self.community_cards = []
-        self.pot = 0
-        self.betMoney = 0
+        self.hand = []  #list for user hand
+        self.community_cards = []  #list for river
+        self.pot = 0  #variable for pot amount
+        self.betMoney = 0  #variable for bet amount
 
 
     def import_image(self):
-        file_path = input("Enter the path of your image: ").replace(" ","")
+        # Allow user to import their card images
+        file_path = input("Enter the path of your image: ").replace(" ","") #Avoiding user error due to spaces after image path
         try:
             image = Image.open(file_path)
             return image
         except:
+            # If bad file path ask again for file.
             print("File not found. Please check the path.")
             return None
 
     def load_hand(self):
+        # load_hand function allows user to upload two cards to hand
         print("Please upload your current hand")
         while True:
             image = self.import_image()
             if image != None:
-                self.hand.append(image)
-            if len(self.hand) ==2:
+                self.hand.append(image) #saves images to hand list
+            if len(self.hand) ==2:   #after adding their two hand cards while loop breaks
                 break
         temp = [predCard(c) for c in self.hand]
         self.hand = temp
         print("Your hand has been saved.")
 
     def load_flop(self):
+        # load_flop adds first three cards from the river to the community cards list before continuing.
         print("Now that the flop has been dealt, please upload the flop.")
         for i in range(3):
             self.community_deal()
 
     def community_deal(self):
+        # communty deal makes sure no more than 5 cards are added to the river
         if len(self.community_cards) == 5:
             print("You've reached the maximum amount of cards you can add to the river.")
         else:
@@ -55,11 +59,13 @@ class Game:
 
 
     def game_loop(self):
+        # game loop runs the program
         print("Welcome to a new game of Poker!")
 
         haveErr = False
         while not haveErr:
             try:
+                # Adding the # of players to alex's playerNum variable
                 poker_solver.playerNum = int(input("How many player are there?: "))
                 haveErr = True
             except:
@@ -74,7 +80,9 @@ class Game:
     #     # or not
     #     print(self.hand)
     #     # self.load_flop()
-        counter = 0
+
+        counter = 0 # counter allows us to have the program do certain thing depending
+        # on how mnay times 'r' is pressed
         while True:
             print("Press 'r' to add cards" * (counter < 4))
             print("Press 'p' to update the pot")
@@ -82,22 +90,25 @@ class Game:
             # if keyboard.is_pressed("r"): #input("what is your decision")
             check = input("")
             if check == "r" and counter < 4:
-                if counter == 0:
+                if counter == 0: # the first time the user presses r, run load hand and add only two cards
                     self.load_hand()
-                elif counter == 1:
+                elif counter == 1: # the second time r is pressed run load flop and add only 3 cards to riv
                     self.load_flop()
                 else:
-                    self.community_deal()
+                    self.community_deal() # after only let user add one card at a time to river. Can't exceed 5.
                 counter += 1
             elif check=="p":
+                # 'p' allows user to uodate the pot amount
                 pot = input("Enter the amount of current pot: ")
-                self.pot = float(pot)
+                self.pot = float(pot) # allowing pot amount to include cents
                 print("Okay! Current pot amount set to ", self.pot)
             elif check == "q":
+                # giving the user a way to leave quit program
                 break
             haveErr = False
             while not haveErr:
                 try:
+                    # allow user to input their bet amount (for alex)
                     self.betMoney += int(input("How much money do you need to check?: "))
                     haveErr = True
                 except:
@@ -105,6 +116,7 @@ class Game:
             haveErr = False
             while not haveErr:
                 try:
+                    # test to see if any players went all in (for alex)
                     self.allIn = int(input("Is anyone all in?(Type 1 for yes, 2 for no): ")) == 1
                     haveErr= True
                 except:

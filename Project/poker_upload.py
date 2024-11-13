@@ -86,19 +86,20 @@ class Game:
                 haveErr = True
                 while haveErr:
                     try:
-                        pot = input("Enter the amount of current pot: ")
-                        self.pot = float(pot)
+                        # 'p' allows user to uodate the pot amount
+                        pot = input("Enter the amount of current pot: ") 
+                        self.pot = float(pot) 
                         haveErr = False
                     except:
                         print("err")
                 print("Okay! Current pot amount set to ", self.pot)
             if check == "r" and counter < 4:
-                if counter == 0:
+                if counter == 0: # the first time the user presses r, run load hand and add only two cards
                     self.load_hand()
-                elif counter == 1:
+                elif counter == 1: # the second time r is pressed run load flop and add only 3 cards to riv
                     self.load_flop()
                 else:
-                    self.community_deal()
+                    self.community_deal() # after only let user add one card at a time to river. Can't exceed 5.
                 counter += 1
 
             haveErr = False

@@ -1,1 +1,8 @@
+In this project we separated the programing into three parts
+1. The image recognition
+2. The user interaction
+3. The poker game win rate and decision making algorithm
 
+To run this program, user need to run the poker_upload.py and start with entering the initial pot amount and two cards in hand by entering the images paths
+The image recognition program will predict the cards in uploaded images
+Then the poker algorithm will run simulations to find the win rate and output suggested decision using existing information

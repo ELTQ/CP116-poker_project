@@ -70,16 +70,7 @@ class Game:
                 haveErr = True
             except:
                 print("Invalid amount, please try again.")
-    #     self.load_hand()
-    #     # get cards() from eliot
-    #     # run decision from alex
-    #     # if the decision folds, then return or use other way
-    #     # to stop the function
-    #     # or ask what the user decides
-    #     # then decide to quit the function(the program)
-    #     # or not
-    #     print(self.hand)
-    #     # self.load_flop()
+   
 
         counter = 0 # counter allows us to have the program do certain thing depending
         # on how mnay times 'r' is pressed
